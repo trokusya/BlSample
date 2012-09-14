@@ -30,11 +30,9 @@
 //    [self startPicker];
     
     // フィールド
-    _f = [[FieldView alloc]initWithFrame:CGRectMake(0, 0, 44*7+2, 44*7+2)];
+    _f = [[FieldView alloc]initWithGridNum:7 size:44];
     _f.center = self.view.center;
     [self.view addSubview:_f];
-    
-    
 }
 
 - (void)viewDidUnload
@@ -89,23 +87,22 @@
 //    // データ送信
 //    [self mySendDataToPeers:data];
     
-    float boxW = 44, boxH = boxW;
     
     // 列インデックス
-    int col = point.x / boxW;
+    int colIdx = point.x / _f.size;
     
     // 行インデックス
-    int row = point.y / boxH;
+    int rowIdx = point.y / _f.size;
+    
+//    NSLog(@"[%d] [%d]",colIdx,rowIdx);
     
     // フィールド外は無視
-    if (col < 0 || row < 0) {
+    if (point.x < 0 || point.y < 0 || _f.colNum <= colIdx || _f.rowNum <= rowIdx) {
         return;
     }
     
-    NSLog(@"col[%d] row[%d]",col,row);
-    
     // グリッドの再描画
-    int glidIdx = col+row*7;
+    int glidIdx = colIdx + rowIdx * _f.rowNum;
     GlidView *glid = [_f.glids objectAtIndex:glidIdx];
     
     if (_f.hitGlid == glidIdx) {
@@ -116,28 +113,41 @@
         glid.glidStatus = GlidStateSelect;
     }
     [_f bringSubviewToFront:glid]; // 指定のグリッドを一番上の階層に移動
-    
-    [UIView animateWithDuration:0.2f // 完了するまでにかかる秒数
+   
+    glid.alpha = 0;
+    [UIView animateWithDuration:2.0f // 完了するまでにかかる秒数
                           delay:0.0f // 開始までの秒数
-                        options:UIViewAnimationOptionCurveEaseOut
+                        options:UIViewAnimationOptionCurveEaseIn
                      animations:^{
-                         glid.alpha = 0.5f;
-                         glid.transform = CGAffineTransformMakeScale(2.0, 2.0);
+                         glid.alpha = 1.0f;
                      }
                      completion:^(BOOL finished){
                          
-                         [UIView animateWithDuration:0.3f // 完了するまでにかかる秒数
-                                               delay:0.0f // 開始までの秒数
-                                             options:UIViewAnimationOptionCurveEaseIn
-                                          animations:^{
-                                              glid.alpha = 1.0f;
-                                              glid.transform = CGAffineTransformMakeScale(1, 1);
-                                          }
-                                          completion:^(BOOL finished){
-                                              NSLog(@"Completed Bom End Animation!");
-                                          }];
                      }];
     [glid setNeedsDisplay];
+    
+    
+//    [UIView animateWithDuration:0.2f // 完了するまでにかかる秒数
+//                          delay:0.0f // 開始までの秒数
+//                        options:UIViewAnimationOptionCurveEaseOut
+//                     animations:^{
+//                         glid.alpha = 0.5f;
+//                         glid.transform = CGAffineTransformMakeScale(2.0, 2.0);
+//                     }
+//                     completion:^(BOOL finished){
+//                         
+//                         [UIView animateWithDuration:0.3f // 完了するまでにかかる秒数
+//                                               delay:0.0f // 開始までの秒数
+//                                             options:UIViewAnimationOptionCurveEaseIn
+//                                          animations:^{
+//                                              glid.alpha = 1.0f;
+//                                              glid.transform = CGAffineTransformMakeScale(1, 1);
+//                                          }
+//                                          completion:^(BOOL finished){
+//                                              NSLog(@"Completed Bom End Animation!");
+//                                          }];
+//                     }];
+//    [glid setNeedsDisplay];
     
 //    UIView *bom = [[BomView alloc]initWithFrame:CGRectMake(_f.frame.origin.x+boxW*col, _f.frame.origin.y+boxH*row, 44, 44)];
 //    NSLog(@"col[%d] row[%d]",col,row);
