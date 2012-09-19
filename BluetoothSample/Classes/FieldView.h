@@ -8,6 +8,7 @@
 
 #import <UIKit/UIKit.h>
 #import "GlidView.h"
+#import "BattleshipView.h"
 
 @interface FieldView : UIView
 {
@@ -15,7 +16,10 @@
     int _glidHeight;
 }
 
-@property (nonatomic,retain) NSMutableArray *glids;
+- (void)addBattleShip:(BattleshipView*)ship colIdx:(int)colIdx rowIdx:(int)rowIdx;
+
+@property (nonatomic,retain) NSMutableArray *glids; // マス目の情報
+@property (nonatomic,retain) NSMutableArray *ships; // 艦情報
 @property (nonatomic) NSInteger hitGlid;
 
 @property (nonatomic,readonly) int rowNum; // 行数

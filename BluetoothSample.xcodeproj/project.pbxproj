@@ -19,6 +19,7 @@
 		CA65F0BB15FD71470079E1CF /* BlViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = CA65F0BA15FD71470079E1CF /* BlViewController.m */; };
 		CA65F0BE15FD71470079E1CF /* BlViewController.xib in Resources */ = {isa = PBXBuildFile; fileRef = CA65F0BC15FD71470079E1CF /* BlViewController.xib */; };
 		CA65F0C515FD715E0079E1CF /* GameKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = CA65F0C415FD715E0079E1CF /* GameKit.framework */; };
+		CA7F907516043E61005CD3C7 /* BattleshipView.m in Sources */ = {isa = PBXBuildFile; fileRef = CA7F907416043E61005CD3C7 /* BattleshipView.m */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -42,6 +43,9 @@
 		CA65F0BA15FD71470079E1CF /* BlViewController.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = BlViewController.m; sourceTree = "<group>"; };
 		CA65F0BD15FD71470079E1CF /* en */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = en; path = en.lproj/BlViewController.xib; sourceTree = "<group>"; };
 		CA65F0C415FD715E0079E1CF /* GameKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = GameKit.framework; path = System/Library/Frameworks/GameKit.framework; sourceTree = SDKROOT; };
+		CA7F907316043E61005CD3C7 /* BattleshipView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BattleshipView.h; sourceTree = "<group>"; };
+		CA7F907416043E61005CD3C7 /* BattleshipView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = BattleshipView.m; sourceTree = "<group>"; };
+		CA7F907716043F2B005CD3C7 /* define.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = define.h; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -68,6 +72,8 @@
 				CA20CDDF1602E3BA00832FB5 /* FieldView.m */,
 				CA20CDE21603037100832FB5 /* GlidView.h */,
 				CA20CDE31603037100832FB5 /* GlidView.m */,
+				CA7F907316043E61005CD3C7 /* BattleshipView.h */,
+				CA7F907416043E61005CD3C7 /* BattleshipView.m */,
 			);
 			path = Classes;
 			sourceTree = "<group>";
@@ -110,6 +116,7 @@
 				CA65F0BA15FD71470079E1CF /* BlViewController.m */,
 				CA65F0BC15FD71470079E1CF /* BlViewController.xib */,
 				CA65F0AE15FD71470079E1CF /* Supporting Files */,
+				CA7F907716043F2B005CD3C7 /* define.h */,
 			);
 			path = BluetoothSample;
 			sourceTree = "<group>";
@@ -194,6 +201,7 @@
 				CA000A781601650500C105D5 /* BomView.m in Sources */,
 				CA20CDE01602E3BA00832FB5 /* FieldView.m in Sources */,
 				CA20CDE41603037100832FB5 /* GlidView.m in Sources */,
+				CA7F907516043E61005CD3C7 /* BattleshipView.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

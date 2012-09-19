@@ -14,7 +14,11 @@
     
     IBOutlet UIButton *sendBtn;
     
+    // フィールド
     FieldView *_f;
+    
+    // 戦艦配置用一時格納配列
+    NSMutableDictionary *_tmpBattleShips;
 }
 - (IBAction)connect:(id)sender;
 

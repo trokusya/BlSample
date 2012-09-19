@@ -9,10 +9,13 @@
 #import "BlViewController.h"
 #import "BomView.h"
 #import "FieldView.h"
+#import "BattleshipView.h"
 
 @interface BlViewController ()
 
 @end
+
+#define TmpBattleShipTagName 1
 
 @implementation BlViewController
 
@@ -26,6 +29,9 @@
     [super viewDidLoad];
 	// Do any additional setup after loading the view, typically from a nib.
     
+    {// init
+//        _tmpBattleShips = [[NSMutableDictionary alloc]initWithCapacity:1];
+    }
     // picker表示
 //    [self startPicker];
     
@@ -33,6 +39,17 @@
     _f = [[FieldView alloc]initWithGridNum:7 size:44];
     _f.center = self.view.center;
     [self.view addSubview:_f];
+    
+    // 戦艦
+    BattleshipView *_bA = [[BattleshipView alloc]initWithFrame:CGRectMake(20, 20, 42, 42)];
+    // dragジェスチャーの登録
+    UIPanGestureRecognizer *pan = [[UIPanGestureRecognizer alloc]initWithTarget:self action:@selector(pan:)];
+    [_bA addGestureRecognizer:pan];
+    [pan release];
+    
+    
+    [self.view addSubview:_bA];
+    [_bA release];
 }
 
 - (void)viewDidUnload
@@ -71,8 +88,72 @@
 #pragma mark -
 #pragma mark Event Handling Methods
 
--(void)touchesBegan:(NSSet *)touches withEvent:(UIEvent *)event
+#pragma mark touch gesture
+
+// 戦艦の配置ドラッグイベント
+- (void)pan:(UIPanGestureRecognizer *)sender
+{   
+    DebugLog(@"state [%d]", sender.state);
+    
+    // フィールドから見た相対位置
+    CGPoint ptF = [sender locationInView:_f];
+    // 列インデックス
+    int colIdx = ptF.x / _f.size;
+    // 行インデックス
+    int rowIdx = ptF.y / _f.size;
+    
+    // 移動する戦艦View
+    BattleshipView *_bA = (BattleshipView*)sender.view;
+    
+    // 移動開始
+    if (sender.state == UIGestureRecognizerStateBegan) {
+        _bA.alpha = 0.5;
+        
+        // 移動しているのが未配置の戦艦なら次の移動用Viewを追加しておく
+        if (_bA.isSet == NO) {
+            BattleshipView *copy = [[BattleshipView alloc]initWithFrame:_bA.frame];
+            
+            UIPanGestureRecognizer *pan = [[UIPanGestureRecognizer alloc]initWithTarget:self action:@selector(pan:)];
+            [copy addGestureRecognizer:pan];
+            [pan release];
+            
+            [self.view insertSubview:copy belowSubview:_bA];
+        }
+    }
+    
+    // 移動中
+    if (sender.state == UIGestureRecognizerStateChanged) {
+        
+        // 移動量の相対位置
+        CGPoint pt = [sender translationInView:_bA];
+        
+        DebugLog(@"%@", NSStringFromCGPoint(pt));
+        
+        // 移動
+        _bA.center = CGPointMake(_bA.center.x + pt.x, _bA.center.y + pt.y);
+        // 積算された移動量をクリアする
+        [sender setTranslation:CGPointZero inView:_bA];
+    }
+    
+    // 移動終了
+    if (sender.state == UIGestureRecognizerStateEnded) {
+        
+        // フィールド外かどうか判定
+        if (ptF.x < 0 || ptF.y < 0 || _f.colNum <= colIdx || _f.rowNum <= rowIdx) {
+            
+            // フィールド外にほおられたら消す
+            [_bA removeFromSuperview];
+        }else{
+            
+            // フィールドに戦艦追加        
+            [_f addBattleShip:_bA colIdx:colIdx rowIdx:rowIdx];
+        }
+    }
+}
+
+- (void)touchesBegan:(NSSet *)touches withEvent:(UIEvent *)event
 {
+    DebugLog(@"start");
     UITouch* touch = [touches anyObject];
 	CGPoint pt = [touch locationInView:_f];
     [self selectGlid:pt];
@@ -225,6 +306,7 @@
     [self startPicker];
 }
 
+#pragma mark -
 #pragma mark Bluetooth
 // 設定済みセッションの所有権を受け取る
 - (void)peerPickerController:(GKPeerPickerController *)picker didConnectPeer:(NSString *)peerID toSession:(GKSession *)session
@@ -268,8 +350,7 @@
     }
 }
 
-#pragma mark -
-#pragma mark Session Related Methods
+#pragma mark session Related Methods
 
 //
 // invalidate session
@@ -283,7 +364,7 @@
 	}
 }
 
-#pragma mark Data Send/Receive Methods
+#pragma mark data Send/Receive Methods
 
 // ほかのピアにデータを送信する
 - (void) mySendDataToPeers:(NSData *)data
@@ -360,4 +441,6 @@
      */
 
 }
+#pragma mark -
 @end
+
