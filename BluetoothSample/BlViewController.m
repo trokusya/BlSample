@@ -11,6 +11,8 @@
 #import "FieldView.h"
 #import "BattleshipView.h"
 
+#import "define.h"
+
 @interface BlViewController ()
 
 @end
@@ -36,7 +38,7 @@
 //    [self startPicker];
     
     // フィールド
-    _f = [[FieldView alloc]initWithGridNum:7 size:44];
+    _f = [[FieldView alloc]initWithGridNum:FIELD_LINE_NUM size:GLID_SIZE];
     _f.center = self.view.center;
     [self.view addSubview:_f];
     
@@ -123,22 +125,26 @@
     // 行インデックス
     int rowIdx = ptF.y / _f.size;
     
+    DebugLog(@"_f.size[%d] col[%d] row[%d]", _f.size, colIdx, rowIdx);
+    
+    
+    
     // 移動する戦艦View
-    BattleshipView *_bA = (BattleshipView*)sender.view;
+    BattleshipView *ship = (BattleshipView*)sender.view;
     
     // 移動開始
     if (state == UIGestureRecognizerStateBegan) {
-        _bA.alpha = 0.5;
+        ship.alpha = 0.5;
         
         // 移動しているのが未配置の戦艦なら次の移動用Viewを追加しておく
-        if (_bA.isSet == NO) {
-            BattleshipView *copy = [[BattleshipView alloc]initWithFrame:_bA.frame];
+        if (ship.isSet == NO) {
+            BattleshipView *copy = [[BattleshipView alloc]initWithType:ship.type];
             
             UIPanGestureRecognizer *pan = [[UIPanGestureRecognizer alloc]initWithTarget:self action:@selector(pan:)];
             [copy addGestureRecognizer:pan];
             [pan release];
             
-            [self.view insertSubview:copy belowSubview:_bA];
+            [self.view insertSubview:copy belowSubview:ship];
             [copy release];
         }
     }
@@ -147,14 +153,14 @@
     if (state == UIGestureRecognizerStateChanged) {
         
         // 移動量の相対位置
-        CGPoint pt = [sender translationInView:_bA];
+        CGPoint pt = [sender translationInView:ship];
         
 //        DebugLog(@"%@", NSStringFromCGPoint(pt));
         
         // 移動
-        _bA.center = CGPointMake(_bA.center.x + pt.x, _bA.center.y + pt.y);
+        ship.center = CGPointMake(ship.center.x + pt.x, ship.center.y + pt.y);
         // 積算された移動量をクリアする
-        [sender setTranslation:CGPointZero inView:_bA];
+        [sender setTranslation:CGPointZero inView:ship];
     }
     
     // 移動終了
@@ -164,11 +170,11 @@
         if (ptF.x < 0 || ptF.y < 0 || _f.colNum <= colIdx || _f.rowNum <= rowIdx) {
             
             // フィールド外にほおられたら消す
-            [_bA removeFromSuperview];
+            [ship removeFromSuperview];
         }else{
             
             // フィールドに戦艦追加        
-            [_f addBattleShip:_bA colIdx:colIdx rowIdx:rowIdx];
+            [_f addBattleShip:ship colIdx:colIdx rowIdx:rowIdx];
         }
     }
 }

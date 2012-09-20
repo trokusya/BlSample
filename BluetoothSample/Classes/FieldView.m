@@ -30,7 +30,7 @@
     _glidWidth = size, _glidHeight = _glidWidth;
     _size = size;
     
-    self = [super initWithFrame:CGRectMake(0, 0, _glidWidth * num + 2, _glidHeight * num + 2)];
+    self = [super initWithFrame:CGRectMake(0, 0, _glidWidth * num + FIELD_LINE_WIDTH, _glidHeight * num + FIELD_LINE_WIDTH)];
     if (self) {
         // Initialization code
         self.backgroundColor = [UIColor whiteColor];
@@ -54,7 +54,7 @@
         int yIdx = i / rowNum;
         
         // マス目
-        GlidView *glid = [[GlidView alloc]initWithFrame:CGRectMake(_glidWidth * xIdx + 1, _glidHeight * yIdx + 1, _glidWidth, _glidHeight)];
+        GlidView *glid = [[GlidView alloc]initWithFrame:CGRectMake(_glidWidth * xIdx + FIELD_LINE_WIDTH/2, _glidHeight * yIdx + FIELD_LINE_WIDTH/2, _glidWidth, _glidHeight)];
         glid.alpha = 0;
         [self addSubview:glid];
         [glids addObject:glid]; // 管理用配列に追加しとく
@@ -75,6 +75,7 @@
 - (void)addBattleShip:(BattleshipView*)ship colIdx:(int)colIdx rowIdx:(int)rowIdx
 {
     int glidIdx = colIdx + rowIdx * rowNum;
+    DebugLog(@"glidIdx [%d]", glidIdx);
     
     // フィールド内で離された場合位置をマス目にあわせる
     GlidView *glid = [glids objectAtIndex:glidIdx];
@@ -84,6 +85,7 @@
     shipRect.origin.x = glid.frame.origin.x + (glid.frame.size.width/2 - ship.frame.size.width/2);
     shipRect.origin.y = glid.frame.origin.y + (glid.frame.size.height*ship.glidNum - ship.frame.size.height)/2;
     ship.frame = shipRect;
+//    DebugLog(@"glidframex [%f],glidframey [%f]", glid.frame.origin.x,glid.frame.origin.x);
 
     ship.index = glidIdx;
     ship.isSet = YES;

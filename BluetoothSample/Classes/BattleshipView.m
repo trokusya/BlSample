@@ -10,6 +10,7 @@
 
 @implementation BattleshipView
 
+@synthesize type;
 @synthesize glidNum;
 @synthesize index;
 @synthesize isSet;
@@ -29,16 +30,19 @@
     return self;
 }
 
-- (id)initWithType:(ShipType)type
+- (id)initWithType:(ShipType)shipType
 {
-    switch (type) {
+    // タイプを設定
+    type = shipType;
+    switch (shipType) {
         case ShipTypeBattleShip:
-            self = [super initWithFrame:CGRectMake(10, 0, 21, 28)];
             glidNum = 1;
+            // 横幅はグリッドの1/2, 立て幅はグリッドの2/3
+            self = [super initWithFrame:CGRectMake(10, 5, GLID_SIZE/2*1, GLID_SIZE*glidNum/3*2)];
             break;
         case ShipTypeDestroyer:
-            self = [super initWithFrame:CGRectMake(60, 0, 21, 63)];
             glidNum = 2;
+            self = [super initWithFrame:CGRectMake(60, 5, GLID_SIZE/2*1, GLID_SIZE*glidNum/3*2)];
             break;
         default:
             break;

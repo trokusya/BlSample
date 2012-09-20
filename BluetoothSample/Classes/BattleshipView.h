@@ -17,6 +17,8 @@ typedef enum{
 
 @interface BattleshipView : UIView
 
+// 戦艦タイプ
+@property (nonatomic) ShipType type;
 // 配置に必要なマス数
 @property (nonatomic, readonly) int glidNum;
 // 配置マスindex番号

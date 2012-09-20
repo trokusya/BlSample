@@ -38,17 +38,17 @@
     
     switch (glidStatus) {
         case GlidStateBegin:
-            CGContextSetRGBFillColor(context, 0.53, 0.81, 0.92, 1);
+            CGContextSetRGBFillColor(context, 0.53, 0.81, 0.92, 1); // 色
             CGContextFillRect(context, _rect); // 塗りを描画
             break;
         case GlidStateHit:
-            CGContextSetRGBFillColor(context, 1, 0, 0, 1);
+            CGContextSetRGBFillColor(context, 1, 0, 0, 1); // 色
             CGContextFillRect(context, _rect); // 塗りを描画
             break;
         case GlidStateSelect:
             
             // 塗りつぶしの色
-            CGContextSetGrayFillColor(context, 0.45, 1.0);
+            CGContextSetGrayFillColor(context, 0.45, 1.0); // 色
             CGContextFillRect(context, _rect); // 塗りを描画
             
             // マーク
@@ -68,7 +68,7 @@
     
     // 枠線
     CGContextSetRGBStrokeColor(context, 1, 1, 1, 1);
-    CGContextSetLineWidth(context, 2);
+    CGContextSetLineWidth(context, FIELD_LINE_WIDTH);
     CGContextStrokeRect(context, _rect); // 線を描画
 }
 
