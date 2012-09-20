@@ -19,8 +19,8 @@
 - (void)addBattleShip:(BattleshipView*)ship colIdx:(int)colIdx rowIdx:(int)rowIdx;
 
 @property (nonatomic,retain) NSMutableArray *glids; // マス目の情報
-@property (nonatomic,retain) NSMutableArray *ships; // 艦情報
-@property (nonatomic) NSInteger hitGlid;
+@property (nonatomic,retain) NSMutableDictionary *ships; // 艦情報
+@property (nonatomic,retain) NSMutableArray *hitGlids; // ヒット情報
 
 @property (nonatomic,readonly) int rowNum; // 行数
 @property (nonatomic,readonly) int colNum; // 列数

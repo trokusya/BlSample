@@ -12,7 +12,7 @@
 
 @synthesize glids;
 @synthesize ships;
-@synthesize hitGlid;
+@synthesize hitGlids;
 @synthesize colNum;
 @synthesize rowNum;
 @synthesize size = _size;
@@ -36,12 +36,13 @@
         // Initialization code
         self.backgroundColor = [UIColor whiteColor];
         glids = [[NSMutableArray alloc]init];
+        ships = [[NSMutableDictionary alloc]init];
         
         // 列,行数
         colNum = num, rowNum = colNum;
         
         // 当たりをランダムに設定
-        hitGlid = arc4random() % (colNum * rowNum);
+        hitGlids = [[NSMutableArray alloc]initWithObjects:[NSNumber numberWithInt: arc4random() % (colNum * rowNum)], nil];
     }
     return self;
 }
@@ -89,7 +90,10 @@
     [self addSubview:ship];
     
     // 当たりを設定
-    hitGlid = glidIdx;
+    [hitGlids addObject:[NSNumber numberWithInt: glidIdx]];
+    
+    // 船情報を格納しておく   
+    [ships setObject:ship forKey:[NSString stringWithFormat:@"%d", glidIdx]];
 }
 
 @end

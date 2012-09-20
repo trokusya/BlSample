@@ -92,8 +92,9 @@
 
 // 戦艦の配置ドラッグイベント
 - (void)pan:(UIPanGestureRecognizer *)sender
-{   
-    DebugLog(@"state [%d]", sender.state);
+{
+    UIGestureRecognizerState state = sender.state;
+    DebugLog(@"state [%d]", state);
     
     // フィールドから見た相対位置
     CGPoint ptF = [sender locationInView:_f];
@@ -106,7 +107,7 @@
     BattleshipView *_bA = (BattleshipView*)sender.view;
     
     // 移動開始
-    if (sender.state == UIGestureRecognizerStateBegan) {
+    if (state == UIGestureRecognizerStateBegan) {
         _bA.alpha = 0.5;
         
         // 移動しているのが未配置の戦艦なら次の移動用Viewを追加しておく
@@ -118,11 +119,12 @@
             [pan release];
             
             [self.view insertSubview:copy belowSubview:_bA];
+            [copy release];
         }
     }
     
     // 移動中
-    if (sender.state == UIGestureRecognizerStateChanged) {
+    if (state == UIGestureRecognizerStateChanged) {
         
         // 移動量の相対位置
         CGPoint pt = [sender translationInView:_bA];
@@ -136,7 +138,7 @@
     }
     
     // 移動終了
-    if (sender.state == UIGestureRecognizerStateEnded) {
+    if (state == UIGestureRecognizerStateEnded) {
         
         // フィールド外かどうか判定
         if (ptF.x < 0 || ptF.y < 0 || _f.colNum <= colIdx || _f.rowNum <= rowIdx) {
@@ -186,13 +188,19 @@
     int glidIdx = colIdx + rowIdx * _f.rowNum;
     GlidView *glid = [_f.glids objectAtIndex:glidIdx];
     
-    if (_f.hitGlid == glidIdx) {
-        // 当たり
-        glid.glidStatus = GlidStateHit;
-    }else{
-        // ハズレ
-        glid.glidStatus = GlidStateSelect;
+    
+    // ハズレ
+    glid.glidStatus = GlidStateSelect;
+    // 当たり？
+    for (int i=0; i<[_f.hitGlids count]; i++) {
+        NSNumber *hit = [_f.hitGlids objectAtIndex:i];
+        
+        if ([hit intValue] == glidIdx) {
+            // 当たり
+            glid.glidStatus = GlidStateHit;
+        }
     }
+    
     [_f bringSubviewToFront:glid]; // 指定のグリッドを一番上の階層に移動
    
     glid.alpha = 0;
