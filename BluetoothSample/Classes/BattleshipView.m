@@ -10,12 +10,40 @@
 
 @implementation BattleshipView
 
+@synthesize glidNum;
 @synthesize index;
 @synthesize isSet;
 
 - (id)initWithFrame:(CGRect)frame
 {
     self = [super initWithFrame:frame];
+    if (self) {
+        // Initialization code
+        self.backgroundColor = [UIColor blackColor];
+        
+        // マス目に未配置
+        isSet = NO;
+        
+        glidNum = 2;
+    }
+    return self;
+}
+
+- (id)initWithType:(ShipType)type
+{
+    switch (type) {
+        case ShipTypeBattleShip:
+            self = [super initWithFrame:CGRectMake(10, 0, 21, 28)];
+            glidNum = 1;
+            break;
+        case ShipTypeDestroyer:
+            self = [super initWithFrame:CGRectMake(60, 0, 21, 63)];
+            glidNum = 2;
+            break;
+        default:
+            break;
+    }
+    
     if (self) {
         // Initialization code
         self.backgroundColor = [UIColor blackColor];

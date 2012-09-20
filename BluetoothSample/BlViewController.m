@@ -41,15 +41,23 @@
     [self.view addSubview:_f];
     
     // 戦艦
-    BattleshipView *_bA = [[BattleshipView alloc]initWithFrame:CGRectMake(20, 20, 42, 42)];
+    BattleshipView *battleShip = [[BattleshipView alloc]initWithType:ShipTypeBattleShip];
     // dragジェスチャーの登録
     UIPanGestureRecognizer *pan = [[UIPanGestureRecognizer alloc]initWithTarget:self action:@selector(pan:)];
-    [_bA addGestureRecognizer:pan];
+    [battleShip addGestureRecognizer:pan];
+    [self.view addSubview:battleShip];
+    [battleShip release];
+    
+    // 駆逐艦
+    BattleshipView *destroyer = [[BattleshipView alloc]initWithType:ShipTypeDestroyer];
+    // dragジェスチャーの登録
+    pan = [[UIPanGestureRecognizer alloc]initWithTarget:self action:@selector(pan:)];
+    [destroyer addGestureRecognizer:pan];
+    [self.view addSubview:destroyer];
+    [destroyer release];
+    
     [pan release];
-    
-    
-    [self.view addSubview:_bA];
-    [_bA release];
+
 }
 
 - (void)viewDidUnload
@@ -94,10 +102,22 @@
 - (void)pan:(UIPanGestureRecognizer *)sender
 {
     UIGestureRecognizerState state = sender.state;
-    DebugLog(@"state [%d]", state);
+//    DebugLog(@"state [%d]", state);
     
     // フィールドから見た相対位置
     CGPoint ptF = [sender locationInView:_f];
+    DebugLog(@"Filld %@",NSStringFromCGPoint(ptF));
+    
+    // 自身から見た相対位置
+    CGPoint pt = [sender locationInView:sender.view];
+    float shipHeightHalf = sender.view.frame.size.height / 2;
+    if (pt.y < shipHeightHalf){
+        DebugLog(@"掴んでいる位置が半分より上, [%f] < [%f]",pt.y,shipHeightHalf);
+    }else{
+        DebugLog(@"掴んでいる位置が半分より下, [%f] < [%f]",pt.y,shipHeightHalf);
+    }    
+    
+    
     // 列インデックス
     int colIdx = ptF.x / _f.size;
     // 行インデックス
@@ -129,7 +149,7 @@
         // 移動量の相対位置
         CGPoint pt = [sender translationInView:_bA];
         
-        DebugLog(@"%@", NSStringFromCGPoint(pt));
+//        DebugLog(@"%@", NSStringFromCGPoint(pt));
         
         // 移動
         _bA.center = CGPointMake(_bA.center.x + pt.x, _bA.center.y + pt.y);
@@ -153,6 +173,7 @@
     }
 }
 
+// コントローラタッチイベント
 - (void)touchesBegan:(NSSet *)touches withEvent:(UIEvent *)event
 {
     DebugLog(@"start");
@@ -160,6 +181,7 @@
 	CGPoint pt = [touch locationInView:_f];
     [self selectGlid:pt];
 }
+
 
 // マス目が選択されたら
 - (void)selectGlid:(CGPoint)point
@@ -188,18 +210,9 @@
     int glidIdx = colIdx + rowIdx * _f.rowNum;
     GlidView *glid = [_f.glids objectAtIndex:glidIdx];
     
-    
-    // ハズレ
-    glid.glidStatus = GlidStateSelect;
     // 当たり？
-    for (int i=0; i<[_f.hitGlids count]; i++) {
-        NSNumber *hit = [_f.hitGlids objectAtIndex:i];
-        
-        if ([hit intValue] == glidIdx) {
-            // 当たり
-            glid.glidStatus = GlidStateHit;
-        }
-    }
+    BOOL hit = [_f.ships.allKeys containsObject:[NSString stringWithFormat:@"%d", glidIdx]];
+    glid.glidStatus = (hit)? GlidStateHit : GlidStateSelect;
     
     [_f bringSubviewToFront:glid]; // 指定のグリッドを一番上の階層に移動
    

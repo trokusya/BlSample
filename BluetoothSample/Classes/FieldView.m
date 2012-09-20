@@ -12,7 +12,6 @@
 
 @synthesize glids;
 @synthesize ships;
-@synthesize hitGlids;
 @synthesize colNum;
 @synthesize rowNum;
 @synthesize size = _size;
@@ -40,9 +39,6 @@
         
         // 列,行数
         colNum = num, rowNum = colNum;
-        
-        // 当たりをランダムに設定
-        hitGlids = [[NSMutableArray alloc]initWithObjects:[NSNumber numberWithInt: arc4random() % (colNum * rowNum)], nil];
     }
     return self;
 }
@@ -82,17 +78,20 @@
     
     // フィールド内で離された場合位置をマス目にあわせる
     GlidView *glid = [glids objectAtIndex:glidIdx];
-    ship.center = glid.center;
+//    ship.center = glid.center;
+    
+    CGRect shipRect = ship.frame;
+    shipRect.origin.x = glid.frame.origin.x + (glid.frame.size.width/2 - ship.frame.size.width/2);
+    shipRect.origin.y = glid.frame.origin.y + (glid.frame.size.height*ship.glidNum - ship.frame.size.height)/2;
+    ship.frame = shipRect;
+
     ship.index = glidIdx;
     ship.isSet = YES;
     
     // マスに配置
     [self addSubview:ship];
     
-    // 当たりを設定
-    [hitGlids addObject:[NSNumber numberWithInt: glidIdx]];
-    
-    // 船情報を格納しておく   
+    // 船情報を格納しておく
     [ships setObject:ship forKey:[NSString stringWithFormat:@"%d", glidIdx]];
 }
 
