@@ -10,13 +10,18 @@
 #import "GlidView.h"
 #import "BattleshipView.h"
 
-@interface FieldView : UIView
+// フィールドのタイプ
+typedef enum {
+    FieldTypeOwn, // 自分の
+    FieldTypeOth  // 相手の
+}FiledType;
+
+@interface FieldView : UIView <NSCoding>
 {
     int _glidWidth;
     int _glidHeight;
+    FiledType _type;
 }
-
-- (void)addBattleShip:(BattleshipView*)ship colIdx:(int)colIdx rowIdx:(int)rowIdx;
 
 @property (nonatomic,retain) NSMutableArray *glids; // マス目の情報
 @property (nonatomic,retain) NSMutableDictionary *ships; // 艦情報
@@ -25,5 +30,6 @@
 @property (nonatomic,readonly) int colNum; // 列数
 @property (nonatomic,readonly) int size;
 
-- (id)initWithGridNum:(int)num size:(int)size;
+- (id)initWithGridNum:(int)num size:(int)size type:(FiledType)type;
+- (void)addBattleShip:(BattleshipView*)ship colIdx:(int)colIdx rowIdx:(int)rowIdx;
 @end

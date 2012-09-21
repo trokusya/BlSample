@@ -18,6 +18,19 @@
     if (self) {
         // Initialization code
         glidStatus = GlidStateBegin;
+        _glidColor = [UIColor colorWithRed:0.53 green:0.81 blue:0.92 alpha:1];// SkyBlue
+        self.backgroundColor = [UIColor yellowColor];
+    }
+    return self;
+}
+
+- (id)initWithFramae:(CGRect)frame color:(UIColor*)color
+{
+    self = [super initWithFrame:frame];
+    if (self) {
+        // Initialization code
+        glidStatus = GlidStateBegin;
+        _glidColor = color;
         self.backgroundColor = [UIColor yellowColor];
     }
     return self;
@@ -38,7 +51,10 @@
     
     switch (glidStatus) {
         case GlidStateBegin:
-            CGContextSetRGBFillColor(context, 0.53, 0.81, 0.92, 1); // 色
+            
+            CGContextSetFillColor(context, CGColorGetComponents(_glidColor.CGColor));
+//            CGContextSetRGBFillColor(context, 0.53, 0.81, 0.92, 1); // 色
+            
             CGContextFillRect(context, _rect); // 塗りを描画
             break;
         case GlidStateHit:

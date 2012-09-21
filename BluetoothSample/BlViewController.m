@@ -37,10 +37,36 @@
     // picker表示
 //    [self startPicker];
     
-    // フィールド
-    _f = [[FieldView alloc]initWithGridNum:FIELD_LINE_NUM size:GLID_SIZE];
-    _f.center = self.view.center;
-    [self.view addSubview:_f];
+    {// スクロールViewの配置
+        CGRect svFrame = self.view.frame;
+        _sv = [[UIScrollView alloc] initWithFrame:svFrame];
+//        _sv.backgroundColor = [UIColor redColor];
+        _sv.contentSize = CGSizeMake(svFrame.size.width * 2, svFrame.size.height); // 格納されるコンテンツサイズ
+        _sv.pagingEnabled = YES;// ページ単位でのスクロール
+        _sv.delegate = self;
+        [self.view addSubview:_sv];
+        [_sv release];
+    }
+    
+    // 自分のフィールド
+    _myF = [[FieldView alloc]initWithGridNum:FIELD_LINE_NUM size:GLID_SIZE type:FieldTypeOwn];
+    _myF.center = self.view.center;
+    [_sv addSubview:_myF];
+    
+    // 対戦相手のフィールド
+    _othF = [[FieldView alloc]initWithGridNum:FIELD_LINE_NUM size:GLID_SIZE type:FieldTypeOth];
+    CGRect otherFrame = _myF.frame;
+    otherFrame.origin.x += _sv.frame.size.width;
+    _othF.frame = otherFrame;
+    [_sv addSubview:_othF];
+    
+    {// ページコントロールViewの配置
+        CGRect pcFrame = CGRectMake(0, _myF.frame.origin.y+_myF.frame.size.height+10, self.view.frame.size.width, 30);
+        _pc = [[UIPageControl alloc]initWithFrame:pcFrame];
+//        _pc.backgroundColor = [UIColor cyanColor];
+        _pc.numberOfPages = 2; // ページ数
+        [self.view addSubview:_pc];
+    }
     
     // 戦艦
     BattleshipView *battleShip = [[BattleshipView alloc]initWithType:ShipTypeBattleShip];
@@ -66,20 +92,33 @@
 {
     [sendBtn release];
     sendBtn = nil;
-    [_f release];_f=nil;
+    [_myF release];_myF=nil;
+    [_othF release];_othF=nil;
     [super viewDidUnload];
     // Release any retained subviews of the main view.
 }
 
 - (BOOL)shouldAutorotateToInterfaceOrientation:(UIInterfaceOrientation)interfaceOrientation
 {
-    return (interfaceOrientation != UIInterfaceOrientationPortraitUpsideDown);
+    return (interfaceOrientation == UIInterfaceOrientationPortrait);
 }
 
 - (void)dealloc {
     [sendBtn release];
-    [_f release];
+    [_myF release];
+    [_othF release];
     [super dealloc];
+}
+
+#pragma mark -
+#pragma mark UIScrollViewDelegate
+
+// スクロールされたら呼ばれる
+- (void)scrollViewDidScroll:(UIScrollView *)scrollView
+{
+    CGFloat pageWidth = scrollView.frame.size.width;  
+//    DebugLog(@"start x[%f] page[%f]",scrollView.contentOffset.x,floor((scrollView.contentOffset.x - pageWidth / 2) / pageWidth) + 1);
+    _pc.currentPage = floor((scrollView.contentOffset.x - pageWidth / 2) / pageWidth) + 1;  
 }
 
 #pragma mark -
@@ -107,7 +146,7 @@
 //    DebugLog(@"state [%d]", state);
     
     // フィールドから見た相対位置
-    CGPoint ptF = [sender locationInView:_f];
+    CGPoint ptF = [sender locationInView:_myF];
     DebugLog(@"Filld %@",NSStringFromCGPoint(ptF));
     
     // 自身から見た相対位置
@@ -121,11 +160,11 @@
     
     
     // 列インデックス
-    int colIdx = ptF.x / _f.size;
+    int colIdx = ptF.x / _myF.size;
     // 行インデックス
-    int rowIdx = ptF.y / _f.size;
+    int rowIdx = ptF.y / _myF.size;
     
-    DebugLog(@"_f.size[%d] col[%d] row[%d]", _f.size, colIdx, rowIdx);
+    DebugLog(@"_f.size[%d] col[%d] row[%d]", _myF.size, colIdx, rowIdx);
     
     
     
@@ -167,125 +206,18 @@
     if (state == UIGestureRecognizerStateEnded) {
         
         // フィールド外かどうか判定
-        if (ptF.x < 0 || ptF.y < 0 || _f.colNum <= colIdx || _f.rowNum <= rowIdx) {
+        if (ptF.x < 0 || ptF.y < 0 || _myF.colNum <= colIdx || _myF.rowNum <= rowIdx) {
             
             // フィールド外にほおられたら消す
             [ship removeFromSuperview];
         }else{
             
             // フィールドに戦艦追加        
-            [_f addBattleShip:ship colIdx:colIdx rowIdx:rowIdx];
+            [_myF addBattleShip:ship colIdx:colIdx rowIdx:rowIdx];
         }
     }
 }
 
-// コントローラタッチイベント
-- (void)touchesBegan:(NSSet *)touches withEvent:(UIEvent *)event
-{
-    DebugLog(@"start");
-    UITouch* touch = [touches anyObject];
-	CGPoint pt = [touch locationInView:_f];
-    [self selectGlid:pt];
-}
-
-
-// マス目が選択されたら
-- (void)selectGlid:(CGPoint)point
-{
-//    // 弾表示位置
-//    NSData *data = [NSData dataWithBytes:&point length:sizeof(point)];
-//    
-//    // データ送信
-//    [self mySendDataToPeers:data];
-    
-    
-    // 列インデックス
-    int colIdx = point.x / _f.size;
-    
-    // 行インデックス
-    int rowIdx = point.y / _f.size;
-    
-//    NSLog(@"[%d] [%d]",colIdx,rowIdx);
-    
-    // フィールド外は無視
-    if (point.x < 0 || point.y < 0 || _f.colNum <= colIdx || _f.rowNum <= rowIdx) {
-        return;
-    }
-    
-    // グリッドの再描画
-    int glidIdx = colIdx + rowIdx * _f.rowNum;
-    GlidView *glid = [_f.glids objectAtIndex:glidIdx];
-    
-    // 当たり？
-    BOOL hit = [_f.ships.allKeys containsObject:[NSString stringWithFormat:@"%d", glidIdx]];
-    glid.glidStatus = (hit)? GlidStateHit : GlidStateSelect;
-    
-    [_f bringSubviewToFront:glid]; // 指定のグリッドを一番上の階層に移動
-   
-    glid.alpha = 0;
-    [UIView animateWithDuration:2.0f // 完了するまでにかかる秒数
-                          delay:0.0f // 開始までの秒数
-                        options:UIViewAnimationOptionCurveEaseIn
-                     animations:^{
-                         glid.alpha = 1.0f;
-                     }
-                     completion:^(BOOL finished){
-                         
-                     }];
-    [glid setNeedsDisplay];
-    
-    
-//    [UIView animateWithDuration:0.2f // 完了するまでにかかる秒数
-//                          delay:0.0f // 開始までの秒数
-//                        options:UIViewAnimationOptionCurveEaseOut
-//                     animations:^{
-//                         glid.alpha = 0.5f;
-//                         glid.transform = CGAffineTransformMakeScale(2.0, 2.0);
-//                     }
-//                     completion:^(BOOL finished){
-//                         
-//                         [UIView animateWithDuration:0.3f // 完了するまでにかかる秒数
-//                                               delay:0.0f // 開始までの秒数
-//                                             options:UIViewAnimationOptionCurveEaseIn
-//                                          animations:^{
-//                                              glid.alpha = 1.0f;
-//                                              glid.transform = CGAffineTransformMakeScale(1, 1);
-//                                          }
-//                                          completion:^(BOOL finished){
-//                                              NSLog(@"Completed Bom End Animation!");
-//                                          }];
-//                     }];
-//    [glid setNeedsDisplay];
-    
-//    UIView *bom = [[BomView alloc]initWithFrame:CGRectMake(_f.frame.origin.x+boxW*col, _f.frame.origin.y+boxH*row, 44, 44)];
-//    NSLog(@"col[%d] row[%d]",col,row);
-//    [self.view addSubview:bom];
-//    [bom release];
-//    
-//    [UIView animateWithDuration:0.4f // 完了するまでにかかる秒数
-//                          delay:0.0f // 開始までの秒数
-//                        options:UIViewAnimationOptionCurveEaseOut
-//                     animations:^{
-//                         bom.alpha = 0.1f;
-//                         bom.transform = CGAffineTransformMakeScale(2.0, 2.0);
-//                     }
-//                     completion:^(BOOL finished){
-//                         
-//                         [UIView animateWithDuration:0.3f // 完了するまでにかかる秒数
-//                                               delay:0.0f // 開始までの秒数
-//                                             options:UIViewAnimationOptionCurveEaseIn
-//                                          animations:^{
-//                                              bom.alpha = 1.0f;
-//                                              bom.transform = CGAffineTransformMakeScale(1, 1);
-//                                          }
-//                                          completion:^(BOOL finished){
-//                                              NSLog(@"Completed Bom End Animation!");
-//                                          }];
-//
-//                         NSLog(@"Completed Bom Start Animation!");
-//                     }];
-    
-}
 
 - (void)bullet:(CGPoint)point
 {
@@ -330,7 +262,11 @@
 // Connectボタン
 - (IBAction)connect:(id)sender
 {
-    [self startPicker];
+//    [self startPicker];
+    
+    // NSDataにシリアライズして初回設定値を受け渡す
+    NSData *data = [NSKeyedArchiver archivedDataWithRootObject:_myF];
+    [self mySendDataToPeers:data];
 }
 
 #pragma mark -
@@ -345,6 +281,7 @@
     picker.delegate = nil;
     [picker dismiss];
     [picker autorelease];
+    
     // ゲーム開始する
 }
 // ユーザがピッカーをキャンセル
@@ -407,24 +344,29 @@
 {
     NSLog(@"Data receive [%@]", data);
     
-    {// CGPointを受け取る
-        CGPoint center = *(CGPoint*)[data bytes];
-        UIView *bom = [[BomView alloc]initWithFrame:CGRectMake(0, 0, 50, 50)];
-        bom.center = center;
-        [self.view addSubview:bom];
-        [bom release];
-        
-//        [UIView animateWithDuration:0.4f // 完了するまでにかかる秒数
-//                              delay:0.0f // 開始までの秒数
-//                            options:UIViewAnimationOptionCurveLinear
-//                         animations:^{
-//                             bom.alpha = 0.0f;
-//                             bom.transform = CGAffineTransformMakeScale(10, 10);
-//                         }
-//                         completion:^(BOOL finished){
-//                             NSLog(@"Completed Bom Animation!");
-//                         }];
+    {// フィールド情報を受け取る
+        FieldView *field = [NSKeyedUnarchiver unarchiveObjectWithData:data];
+        DebugLog(@"%d",field.size);
     }
+    
+//    {// CGPointを受け取る
+//        CGPoint center = *(CGPoint*)[data bytes];
+//        UIView *bom = [[BomView alloc]initWithFrame:CGRectMake(0, 0, 50, 50)];
+//        bom.center = center;
+//        [self.view addSubview:bom];
+//        [bom release];
+//        
+////        [UIView animateWithDuration:0.4f // 完了するまでにかかる秒数
+////                              delay:0.0f // 開始までの秒数
+////                            options:UIViewAnimationOptionCurveLinear
+////                         animations:^{
+////                             bom.alpha = 0.0f;
+////                             bom.transform = CGAffineTransformMakeScale(10, 10);
+////                         }
+////                         completion:^(BOOL finished){
+////                             NSLog(@"Completed Bom Animation!");
+////                         }];
+//    }
     
     /*
     {// NSStringメッセージを受け取る

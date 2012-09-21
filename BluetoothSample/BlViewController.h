@@ -10,12 +10,21 @@
 #import <GameKit/GameKit.h>
 #import "FieldView.h"
 
-@interface BlViewController : UIViewController<GKPeerPickerControllerDelegate,GKSessionDelegate>{
+@interface BlViewController : UIViewController<GKPeerPickerControllerDelegate,GKSessionDelegate,UIScrollViewDelegate>{
     
     IBOutlet UIButton *sendBtn;
     
-    // フィールド
-    FieldView *_f;
+    // スクロールビュー
+    UIScrollView *_sv;
+    
+    // ページコントロールビュー
+    UIPageControl *_pc;
+    
+    // 自分のフィールド
+    FieldView *_myF;
+    
+    // 対戦相手のフィールド
+    FieldView *_othF;
     
     // 戦艦配置用一時格納配列
     NSMutableDictionary *_tmpBattleShips;

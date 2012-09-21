@@ -17,7 +17,10 @@ enum GlidState{
 
 @interface GlidView : UIView
 {
+    UIColor *_glidColor;
 }
+
+- (id)initWithFramae:(CGRect)frame color:(UIColor*)color;
 
 @property (nonatomic) NSInteger glidStatus;
 

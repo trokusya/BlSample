@@ -37,12 +37,12 @@
     switch (shipType) {
         case ShipTypeBattleShip:
             glidNum = 1;
-            // 横幅はグリッドの1/2, 立て幅はグリッドの2/3
-            self = [super initWithFrame:CGRectMake(10, 5, GLID_SIZE/2*1, GLID_SIZE*glidNum/3*2)];
+            // 横幅はグリッドの2/3, 縦幅はグリッドの2/3
+            self = [super initWithFrame:CGRectMake(10, 5, GLID_SIZE/3*2, GLID_SIZE*glidNum/3*2)];
             break;
         case ShipTypeDestroyer:
             glidNum = 2;
-            self = [super initWithFrame:CGRectMake(60, 5, GLID_SIZE/2*1, GLID_SIZE*glidNum/3*2)];
+            self = [super initWithFrame:CGRectMake(60, 5, GLID_SIZE/3*2, GLID_SIZE*glidNum/3*2)];
             break;
         default:
             break;
