@@ -26,12 +26,10 @@
     // 対戦相手のフィールド
     FieldView *_othF;
     
-    // 戦艦配置用一時格納配列
-    NSMutableDictionary *_tmpBattleShips;
+    GKSession *gameSession;
 }
 - (IBAction)connect:(id)sender;
 
-@property (nonatomic,retain) GKPeerPickerController *picker;
-@property (nonatomic,retain) GKSession *gameSession;
 @property (nonatomic,retain) UIView *bullet;
+@property (nonatomic,retain) GKSession *gameSession;
 @end

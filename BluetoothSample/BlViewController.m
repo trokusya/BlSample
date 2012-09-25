@@ -17,25 +17,28 @@
 
 @end
 
-#define TmpBattleShipTagName 1
-
 @implementation BlViewController
 
 // プロパティ = メンバ変数
-@synthesize picker = _picker;
-@synthesize gameSession = _gameSession;
 @synthesize bullet = _bullet;
+@synthesize gameSession;
 
 - (void)viewDidLoad
 {
     [super viewDidLoad];
+    
 	// Do any additional setup after loading the view, typically from a nib.
     
     {// init
-//        _tmpBattleShips = [[NSMutableDictionary alloc]initWithCapacity:1];
+        
+        // viewのサイズを調整する
+        CGSize appFrameSize = [[UIScreen mainScreen]applicationFrame].size;
+        self.view.frame = CGRectMake(0, 0, appFrameSize.width, appFrameSize.height);
+        
+        self.gameSession = nil;
     }
     // picker表示
-//    [self startPicker];
+    [self startPicker];
     
     {// スクロールViewの配置
         CGRect svFrame = self.view.frame;
@@ -68,13 +71,20 @@
         [self.view addSubview:_pc];
     }
     
-    // 戦艦
-    BattleshipView *battleShip = [[BattleshipView alloc]initWithType:ShipTypeBattleShip];
+    // スタートボタン
+    UIButton *startBtn =[UIButton buttonWithType:UIButtonTypeRoundedRect];
+    startBtn.frame = CGRectMake(_myF.frame.origin.x, _myF.frame.origin.y - 30, 64, 30);
+    [startBtn setTitle:@"スタート" forState:UIControlStateNormal];
+    [startBtn addTarget:self action:@selector(startBtn:) forControlEvents:UIControlEventTouchDown];
+    [_sv addSubview:startBtn];
+    
+    // 潜水艦
+    BattleshipView *submarine = [[BattleshipView alloc]initWithType:ShipTypeSubmarine];
     // dragジェスチャーの登録
     UIPanGestureRecognizer *pan = [[UIPanGestureRecognizer alloc]initWithTarget:self action:@selector(pan:)];
-    [battleShip addGestureRecognizer:pan];
-    [self.view addSubview:battleShip];
-    [battleShip release];
+    [submarine addGestureRecognizer:pan];
+    [self.view addSubview:submarine];
+    [submarine release];
     
     // 駆逐艦
     BattleshipView *destroyer = [[BattleshipView alloc]initWithType:ShipTypeDestroyer];
@@ -84,8 +94,15 @@
     [self.view addSubview:destroyer];
     [destroyer release];
     
+    // 戦艦
+    BattleshipView *battleShip = [[BattleshipView alloc]initWithType:ShipTypeBattleShip];
+    // dragジェスチャーの登録
+    pan = [[UIPanGestureRecognizer alloc]initWithTarget:self action:@selector(pan:)];
+    [battleShip addGestureRecognizer:pan];
+    [self.view addSubview:battleShip];
+    [battleShip release];
+    
     [pan release];
-
 }
 
 - (void)viewDidUnload
@@ -94,6 +111,7 @@
     sendBtn = nil;
     [_myF release];_myF=nil;
     [_othF release];_othF=nil;
+    [self.gameSession release];self.gameSession=nil;
     [super viewDidUnload];
     // Release any retained subviews of the main view.
 }
@@ -107,6 +125,10 @@
     [sendBtn release];
     [_myF release];
     [_othF release];
+    
+    
+	[self invalidateSession:self.gameSession];
+    [self.gameSession release];
     [super dealloc];
 }
 
@@ -126,18 +148,17 @@
 
 -(void)startPicker {
     
-    _picker = [[GKPeerPickerController alloc] init];
-    _picker.delegate = self;
+    GKPeerPickerController *picker;
+    picker = [[GKPeerPickerController alloc] init];
+    picker.delegate = self;
     // 許可するネットワークタイプを設定
-    _picker.connectionTypesMask = GKPeerPickerConnectionTypeNearby;
+    picker.connectionTypesMask = GKPeerPickerConnectionTypeNearby;
     // pickerの表示
-    [_picker show];
+    [picker show];
 }
 
 #pragma mark -
 #pragma mark Event Handling Methods
-
-#pragma mark touch gesture
 
 // 戦艦の配置ドラッグイベント
 - (void)pan:(UIPanGestureRecognizer *)sender
@@ -147,16 +168,16 @@
     
     // フィールドから見た相対位置
     CGPoint ptF = [sender locationInView:_myF];
-    DebugLog(@"Filld %@",NSStringFromCGPoint(ptF));
+//    DebugLog(@"Filld %@",NSStringFromCGPoint(ptF));
     
-    // 自身から見た相対位置
-    CGPoint pt = [sender locationInView:sender.view];
-    float shipHeightHalf = sender.view.frame.size.height / 2;
-    if (pt.y < shipHeightHalf){
-        DebugLog(@"掴んでいる位置が半分より上, [%f] < [%f]",pt.y,shipHeightHalf);
-    }else{
-        DebugLog(@"掴んでいる位置が半分より下, [%f] < [%f]",pt.y,shipHeightHalf);
-    }    
+//    // 自身から見た相対位置
+//    CGPoint pt = [sender locationInView:sender.view];
+//    float shipHeightHalf = sender.view.frame.size.height / 2;
+//    if (pt.y < shipHeightHalf){
+//        DebugLog(@"掴んでいる位置が半分より上, [%f] < [%f]",pt.y,shipHeightHalf);
+//    }else{
+//        DebugLog(@"掴んでいる位置が半分より下, [%f] < [%f]",pt.y,shipHeightHalf);
+//    }    
     
     
     // 列インデックス
@@ -166,8 +187,6 @@
     
     DebugLog(@"_f.size[%d] col[%d] row[%d]", _myF.size, colIdx, rowIdx);
     
-    
-    
     // 移動する戦艦View
     BattleshipView *ship = (BattleshipView*)sender.view;
     
@@ -175,8 +194,26 @@
     if (state == UIGestureRecognizerStateBegan) {
         ship.alpha = 0.5;
         
-        // 移動しているのが未配置の戦艦なら次の移動用Viewを追加しておく
-        if (ship.isSet == NO) {
+        if (ship.isSet) {
+            // 配置済みの戦艦を動かしているので古い当たり情報を削除する
+            for (int i=0; i<ship.glidNum; i++) {
+                switch (ship.viewMode) {
+                    case ShipViewModeTop:
+                    case ShipViewModeBottom:
+                        // 縦に長さ分削除
+                        [_myF.ships removeObjectForKey:[NSString stringWithFormat:@"%d", ship.index+_myF.rowNum*i]];
+                        break;
+                    case ShipViewModeRight:
+                    case ShipViewModeLeft:
+                        // 横に長さ分削除
+                        [_myF.ships removeObjectForKey:[NSString stringWithFormat:@"%d", ship.index+i]];
+                        break;
+                    default:
+                        break;
+                }
+            }
+        }else{
+            // 移動しているのが未配置の戦艦なら次の移動用Viewを追加しておく
             BattleshipView *copy = [[BattleshipView alloc]initWithType:ship.type];
             
             UIPanGestureRecognizer *pan = [[UIPanGestureRecognizer alloc]initWithTarget:self action:@selector(pan:)];
@@ -192,7 +229,7 @@
     if (state == UIGestureRecognizerStateChanged) {
         
         // 移動量の相対位置
-        CGPoint pt = [sender translationInView:ship];
+        CGPoint pt = [sender translationInView:self.view];
         
 //        DebugLog(@"%@", NSStringFromCGPoint(pt));
         
@@ -205,17 +242,69 @@
     // 移動終了
     if (state == UIGestureRecognizerStateEnded) {
         
-        // フィールド外かどうか判定
-        if (ptF.x < 0 || ptF.y < 0 || _myF.colNum <= colIdx || _myF.rowNum <= rowIdx) {
+        ship.alpha = 1.0;
+        
+        // 追加するグリッドインデックス
+        int addGlidIdx = 0;
+        // 重なり合ってるグリッドの数
+        NSMutableArray *hitCnt = [[NSMutableArray alloc]init];
+        // 重なっているGlidを検査
+        for (int i=0; i<[_myF.glids count]; i++) {
             
-            // フィールド外にほおられたら消す
-            [ship removeFromSuperview];
+            CGRect rect1 = ((GlidView *)[_myF.glids objectAtIndex:i]).frame;
+            
+            if (!ship.isSet) {
+                // グリッドの位置をself.viewから見た位置とあわせるためフィールドのxとyを足す
+                rect1.origin.x += _myF.frame.origin.x;
+                rect1.origin.y += _myF.frame.origin.y;
+            }
+            
+            // 船の位置
+            CGRect rect2 = ship.frame;
+            
+            // 重なっている部分があったらhitCntを増やす
+            if (CGRectIntersectsRect(rect1, rect2)) {
+                
+                [hitCnt addObject:[NSNumber numberWithInt:i]];
+            }
+        }
+        
+        
+        // 必要なマス数がヒット数以上なら
+        if (ship.glidNum <= [hitCnt count]) {
+            
+            DebugLog(@"フィールドに追加");
+            
+            switch (ship.viewMode) {
+                case ShipViewModeTop:
+                case ShipViewModeBottom:
+                case ShipViewModeRight:
+                case ShipViewModeLeft:
+                    // 番上のインデックス番号に追加
+                    addGlidIdx = [[hitCnt objectAtIndex:0] intValue];
+                    break;
+                default:
+                    break;
+            }
+            
+            // フィールドに戦艦追加
+            [_myF addBattleShip:ship glidIdx:addGlidIdx];
         }else{
             
-            // フィールドに戦艦追加        
-            [_myF addBattleShip:ship colIdx:colIdx rowIdx:rowIdx];
+            DebugLog(@"フィールドに追加できない");
+            // 追加できないので消す
+            [ship removeFromSuperview];
         }
     }
+}
+
+// 当り設定
+- (void)startBtn:(UIButton *)sender
+{
+    DebugLog(@"start");
+    // NSDataにシリアライズして初回設定値を受け渡す
+    NSData *data = [NSKeyedArchiver archivedDataWithRootObject:_myF];
+    [self mySendDataToPeers:data];
 }
 
 
@@ -275,8 +364,8 @@
 - (void)peerPickerController:(GKPeerPickerController *)picker didConnectPeer:(NSString *)peerID toSession:(GKSession *)session
 {
     self.gameSession = session;
-    session.delegate = self;
-    [session setDataReceiveHandler:self withContext:nil];
+    self.gameSession.delegate = self;
+    [self.gameSession setDataReceiveHandler:self withContext:nil];
     // pickerの削除
     picker.delegate = nil;
     [picker dismiss];
@@ -300,18 +389,40 @@
 - (void)session:(GKSession *)session peer:(NSString *)peerID didChangeState:(GKPeerConnectionState)state
 {
     switch (state) {
+        case GKPeerStateAvailable:
+            DebugLog(@"%@ を見つけた！",peerID);
+            break;
+        case GKPeerStateUnavailable:
+            DebugLog(@"%@ を見失った！",peerID);
+            break;
         case GKPeerStateConnected:
-            // ほかのピアのpeerIDwを記録する
-            // ピアが接続したことをゲームに通知する
+            DebugLog(@"%@ が接続した！",peerID);
             break;
         case GKPeerStateDisconnected:
-            // ピアがいなくなったことをゲームに通知する
-            [self.gameSession release];
-            self.gameSession = nil;
+            DebugLog(@"%@ が切断された！",peerID);
+            break;
+        case GKPeerStateConnecting:
+            DebugLog(@"%@ が接続中！",peerID);
             break;
         default:
             break;
     }
+    switch (state) {
+        case GKPeerStateConnected:
+            // ほかのピアのpeerIDwを記録する
+            // ピアが接続したことをゲームに通知する
+            DebugLog(@"connected");
+            break;
+        case GKPeerStateDisconnected:
+            // ピアがいなくなったことをゲームに通知する
+            [self invalidateSession:self.gameSession];
+            self.gameSession = nil;
+            DebugLog(@"disconnected");
+            break;
+        default:
+            break;
+    }
+    
 }
 
 #pragma mark session Related Methods
@@ -333,21 +444,48 @@
 // ほかのピアにデータを送信する
 - (void) mySendDataToPeers:(NSData *)data
 {
-    BOOL ok = [self.gameSession sendDataToAllPeers:data withDataMode:GKSendDataReliable error:nil];
+    NSError *error = nil;
+    BOOL ok = [self.gameSession sendDataToAllPeers:data withDataMode:GKSendDataReliable error:&error];
     
-    NSLog(@"Data send [%d]", ok);
+    NSString *message = @"";
+    if (ok) {
+        message = @"対戦相手にデータを送信しました";
+    }else{
+        message = @"データの送信に失敗しました";
+        DebugLog(@"%@", error);
+    }
+    
+    UIAlertView *alert = [[UIAlertView alloc] initWithTitle:@"データ送信"
+													message:message
+												   delegate:self cancelButtonTitle:@"OK" otherButtonTitles: nil];
+	
+	[alert show];
+	[alert release];
+//    NSLog(@"Data send [%d]", ok);
     
 }
 
 // ほかのピアからデータを受け取る
 - (void) receiveData:(NSData *)data fromPeer:(NSString *)peer inSession:(GKSession *)session context:(void *)context
 {
-    NSLog(@"Data receive [%@]", data);
+//    NSLog(@"Data receive [%@]", data);
     
     {// フィールド情報を受け取る
         FieldView *field = [NSKeyedUnarchiver unarchiveObjectWithData:data];
-        DebugLog(@"%d",field.size);
+        
+        // 当り情報を設定する
+        _othF.ships = field.ships;
+        // 開始フラグをたてる
+        _othF.isPlay = YES;
     }
+    
+    NSString *message = @"対戦相手のデータを受信しました";
+    UIAlertView *alert = [[UIAlertView alloc] initWithTitle:@"データ送信"
+													message:message
+												   delegate:self cancelButtonTitle:@"OK" otherButtonTitles: nil];
+	
+	[alert show];
+	[alert release];
     
 //    {// CGPointを受け取る
 //        CGPoint center = *(CGPoint*)[data bytes];

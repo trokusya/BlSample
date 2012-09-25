@@ -21,6 +21,6 @@
 // フィールドの枠線の幅
 #define FIELD_LINE_WIDTH 2
 // フィールドの1辺のグリッド数
-#define FIELD_LINE_NUM 6
+#define FIELD_LINE_NUM 9
 // グリッドの1辺のサイズ
-#define GLID_SIZE 42
+#define GLID_SIZE 32

@@ -15,6 +15,7 @@
 @synthesize colNum;
 @synthesize rowNum;
 @synthesize size = _size;
+@synthesize isPlay;
 
 - (id)initWithFrame:(CGRect)frame
 {
@@ -43,6 +44,9 @@
         
         // 列,行数
         colNum = num, rowNum = colNum;
+        
+        // 設定が終わるまでfalseにしておく
+        isPlay = NO;
     }
     return self;
 }
@@ -89,29 +93,69 @@
 }
 
 // 戦艦をフィールドに配置する
-- (void)addBattleShip:(BattleshipView*)ship colIdx:(int)colIdx rowIdx:(int)rowIdx
+- (void)addBattleShip:(BattleshipView*)ship glidIdx:(int)glidIdx
 {
-    int glidIdx = colIdx + rowIdx * rowNum;
     DebugLog(@"glidIdx [%d]", glidIdx);
     
     // フィールド内で離された場合位置をマス目にあわせる
     GlidView *glid = [glids objectAtIndex:glidIdx];
-//    ship.center = glid.center;
-    
-    CGRect shipRect = ship.frame;
-    shipRect.origin.x = glid.frame.origin.x + (glid.frame.size.width/2 - ship.frame.size.width/2);
-    shipRect.origin.y = glid.frame.origin.y + (glid.frame.size.height*ship.glidNum - ship.frame.size.height)/2;
-    ship.frame = shipRect;
-//    DebugLog(@"glidframex [%f],glidframey [%f]", glid.frame.origin.x,glid.frame.origin.x);
-
+    //    ship.center = glid.center;
+    // 配置インデックス
     ship.index = glidIdx;
+    // セット済みにする
     ship.isSet = YES;
     
+    CGRect shipRect = ship.frame;
+    DebugLog(@"shipFramex [%f],shipFrame [%f]", shipRect.origin.x, shipRect.origin.y);
+    
+    switch (ship.viewMode) {
+        case ShipViewModeTop:
+        case ShipViewModeBottom:
+            // グリッドのx+(グリッドの幅/2 - 船の幅/2)
+            shipRect.origin.x = glid.frame.origin.x + (glid.frame.size.width/2 - ship.frame.size.width/2);
+            shipRect.origin.y = glid.frame.origin.y + (glid.frame.size.height*ship.glidNum - ship.frame.size.height)/2;
+            break;
+        case ShipViewModeRight:
+        case ShipViewModeLeft:
+            // グリッドのx+(グリッドの幅*船の必要マス数/2 - 船の幅/2)
+            shipRect.origin.x = glid.frame.origin.x + (glid.frame.size.width*ship.glidNum/2 - ship.frame.size.width/2);
+            shipRect.origin.y = glid.frame.origin.y + (glid.frame.size.height - ship.frame.size.height)/2;
+            break;
+        default:
+            break;
+    }
+    
+    ship.frame = shipRect;
+    //    DebugLog(@"glidframex [%f],glidframey [%f]", glid.frame.origin.x,glid.frame.origin.x);
     // マスに配置
     [self addSubview:ship];
     
-    // 船情報を格納しておく
-    [ships setObject:ship forKey:[NSString stringWithFormat:@"%d", glidIdx]];
+    // 船情報を格納しておく(長さ分)
+    for (int i=0; i<ship.glidNum; i++) {
+        
+        switch (ship.viewMode) {
+            case ShipViewModeTop:
+            case ShipViewModeBottom:
+                // 縦に長さ分追加
+                [ships setObject:ship forKey:[NSString stringWithFormat:@"%d", glidIdx + rowNum*i]];
+                break;
+            case ShipViewModeRight:
+            case ShipViewModeLeft:
+                // 横に長さ分追加
+                [ships setObject:ship forKey:[NSString stringWithFormat:@"%d", glidIdx + i]];
+                break;
+                
+            default:
+                break;
+        }
+    }
+}
+
+// 戦艦をフィールドに配置する
+- (void)addBattleShip:(BattleshipView*)ship colIdx:(int)colIdx rowIdx:(int)rowIdx
+{
+    int glidIdx = colIdx + rowIdx * rowNum;
+    [self addBattleShip:ship glidIdx:glidIdx];
 }
 
 #pragma mark -
@@ -121,9 +165,11 @@
 - (void)touchesBegan:(NSSet *)touches withEvent:(UIEvent *)event
 {
     DebugLog(@"start");
-    UITouch* touch = [touches anyObject];
-	CGPoint pt = [touch locationInView:self];
-    [self selectGlid:pt];
+    if (isPlay) {
+        UITouch* touch = [touches anyObject];
+        CGPoint pt = [touch locationInView:self];
+        [self selectGlid:pt];
+    }
 }
 
 // マス目が選択されたら

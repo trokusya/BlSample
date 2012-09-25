@@ -10,6 +10,7 @@
 		CA000A781601650500C105D5 /* BomView.m in Sources */ = {isa = PBXBuildFile; fileRef = CA000A771601650500C105D5 /* BomView.m */; };
 		CA20CDE01602E3BA00832FB5 /* FieldView.m in Sources */ = {isa = PBXBuildFile; fileRef = CA20CDDF1602E3BA00832FB5 /* FieldView.m */; };
 		CA20CDE41603037100832FB5 /* GlidView.m in Sources */ = {isa = PBXBuildFile; fileRef = CA20CDE31603037100832FB5 /* GlidView.m */; };
+		CA5D4A6E160FE0BF00CA7818 /* Default-568h@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = CA5D4A6D160FE0BF00CA7818 /* Default-568h@2x.png */; };
 		CA65F0A815FD71470079E1CF /* UIKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = CA65F0A715FD71470079E1CF /* UIKit.framework */; };
 		CA65F0AA15FD71470079E1CF /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = CA65F0A915FD71470079E1CF /* Foundation.framework */; };
 		CA65F0AC15FD71470079E1CF /* CoreGraphics.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = CA65F0AB15FD71470079E1CF /* CoreGraphics.framework */; };
@@ -29,6 +30,7 @@
 		CA20CDDF1602E3BA00832FB5 /* FieldView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = FieldView.m; sourceTree = "<group>"; };
 		CA20CDE21603037100832FB5 /* GlidView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GlidView.h; sourceTree = "<group>"; };
 		CA20CDE31603037100832FB5 /* GlidView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = GlidView.m; sourceTree = "<group>"; };
+		CA5D4A6D160FE0BF00CA7818 /* Default-568h@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "Default-568h@2x.png"; path = "../Default-568h@2x.png"; sourceTree = "<group>"; };
 		CA65F0A315FD71470079E1CF /* BlSample.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = BlSample.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		CA65F0A715FD71470079E1CF /* UIKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = UIKit.framework; path = System/Library/Frameworks/UIKit.framework; sourceTree = SDKROOT; };
 		CA65F0A915FD71470079E1CF /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
@@ -124,6 +126,7 @@
 		CA65F0AE15FD71470079E1CF /* Supporting Files */ = {
 			isa = PBXGroup;
 			children = (
+				CA5D4A6D160FE0BF00CA7818 /* Default-568h@2x.png */,
 				CA65F0AF15FD71470079E1CF /* BluetoothSample-Info.plist */,
 				CA65F0B015FD71470079E1CF /* InfoPlist.strings */,
 				CA65F0B315FD71470079E1CF /* main.m */,
@@ -185,6 +188,7 @@
 			files = (
 				CA65F0B215FD71470079E1CF /* InfoPlist.strings in Resources */,
 				CA65F0BE15FD71470079E1CF /* BlViewController.xib in Resources */,
+				CA5D4A6E160FE0BF00CA7818 /* Default-568h@2x.png in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

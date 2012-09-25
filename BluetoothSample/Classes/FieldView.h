@@ -28,8 +28,11 @@ typedef enum {
 
 @property (nonatomic,readonly) int rowNum; // 行数
 @property (nonatomic,readonly) int colNum; // 列数
-@property (nonatomic,readonly) int size;
+@property (nonatomic,readonly) int size;  // 1辺のマス数
+
+@property (nonatomic) BOOL isPlay; // 対戦開始フラグ
 
 - (id)initWithGridNum:(int)num size:(int)size type:(FiledType)type;
+- (void)addBattleShip:(BattleshipView*)ship glidIdx:(int)glidIdx;
 - (void)addBattleShip:(BattleshipView*)ship colIdx:(int)colIdx rowIdx:(int)rowIdx;
 @end
