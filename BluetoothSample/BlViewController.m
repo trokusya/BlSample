@@ -22,6 +22,7 @@
 // プロパティ = メンバ変数
 @synthesize bullet = _bullet;
 @synthesize gameSession;
+@synthesize vsPeerId;
 
 - (void)viewDidLoad
 {
@@ -107,11 +108,11 @@
 
 - (void)viewDidUnload
 {
-    [sendBtn release];
-    sendBtn = nil;
+    [sendBtn release];sendBtn = nil;
     [_myF release];_myF=nil;
     [_othF release];_othF=nil;
     [self.gameSession release];self.gameSession=nil;
+    [self.vsPeerId release];self.vsPeerId=nil;
     [super viewDidUnload];
     // Release any retained subviews of the main view.
 }
@@ -129,6 +130,7 @@
     
 	[self invalidateSession:self.gameSession];
     [self.gameSession release];
+    [self.vsPeerId release];
     [super dealloc];
 }
 
@@ -295,6 +297,8 @@
             // 追加できないので消す
             [ship removeFromSuperview];
         }
+        
+        [hitCnt release];
     }
 }
 
@@ -363,6 +367,8 @@
 // 設定済みセッションの所有権を受け取る
 - (void)peerPickerController:(GKPeerPickerController *)picker didConnectPeer:(NSString *)peerID toSession:(GKSession *)session
 {
+    self.vsPeerId = peerID;
+    
     self.gameSession = session;
     self.gameSession.delegate = self;
     [self.gameSession setDataReceiveHandler:self withContext:nil];
@@ -385,7 +391,7 @@
 		self.gameSession = nil;
 	}
 }
-
+// 接続ステータスに変更があった場合
 - (void)session:(GKSession *)session peer:(NSString *)peerID didChangeState:(GKPeerConnectionState)state
 {
     switch (state) {
@@ -445,14 +451,18 @@
 - (void) mySendDataToPeers:(NSData *)data
 {
     NSError *error = nil;
-    BOOL ok = [self.gameSession sendDataToAllPeers:data withDataMode:GKSendDataReliable error:&error];
+    
+    // 特定のピアに送る
+    BOOL ok =[self.gameSession sendData:data toPeers:[NSArray arrayWithObject:self.vsPeerId] withDataMode:GKSendDataReliable error:&error];
+//    // 全てのピアに送る
+//    BOOL ok = [self.gameSession sendDataToAllPeers:data withDataMode:GKSendDataReliable error:&error];
     
     NSString *message = @"";
     if (ok) {
         message = @"対戦相手にデータを送信しました";
     }else{
         message = @"データの送信に失敗しました";
-        DebugLog(@"%@", error);
+        DebugLog(@"%d %@", [error code], [error localizedDescription]);
     }
     
     UIAlertView *alert = [[UIAlertView alloc] initWithTitle:@"データ送信"

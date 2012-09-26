@@ -32,4 +32,5 @@
 
 @property (nonatomic,retain) UIView *bullet;
 @property (nonatomic,retain) GKSession *gameSession;
+@property (nonatomic,retain) NSString *vsPeerId;
 @end
