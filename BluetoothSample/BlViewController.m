@@ -69,6 +69,8 @@
         _pc = [[UIPageControl alloc]initWithFrame:pcFrame];
 //        _pc.backgroundColor = [UIColor cyanColor];
         _pc.numberOfPages = 2; // ページ数
+        // ページコントロールがタップされたときのイベントをキャッチする
+        [_pc addTarget:self action:@selector(pageControlDidChanged:) forControlEvents:UIControlEventValueChanged];
         [self.view addSubview:_pc];
     }
     
@@ -350,6 +352,15 @@
                      }];
     //    NSString *message = @"メッセージ送るよ";
     //    NSData *data = [message dataUsingEncoding:NSUTF8StringEncoding];
+}
+
+// ページコントロールが押されたときの処理
+- (void)pageControlDidChanged:(UIPageControl *)sender
+{
+    CGRect frame = _sv.frame;
+    frame.origin.x = frame.size.width * sender.currentPage;
+    // 指定ページへスクロールする
+    [_sv scrollRectToVisible:frame animated:YES];
 }
 
 // Connectボタン
