@@ -24,3 +24,10 @@
 #define FIELD_LINE_NUM 9
 // グリッドの1辺のサイズ
 #define GLID_SIZE 32
+
+
+// ゲームステータス定義
+typedef enum {
+    GameStatusInit,
+    GameStatusPlay,
+}GameStatus;

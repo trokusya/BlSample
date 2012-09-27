@@ -9,6 +9,7 @@
 #import <UIKit/UIKit.h>
 #import "GlidView.h"
 #import "BattleshipView.h"
+#import "define.h"
 
 // フィールドのタイプ
 typedef enum {
@@ -21,6 +22,9 @@ typedef enum {
     int _glidWidth;
     int _glidHeight;
     FiledType _type;
+    
+    id _sendTarget;
+    SEL _sendSelector;
 }
 
 @property (nonatomic,retain) NSMutableArray *glids; // マス目の情報
@@ -35,4 +39,6 @@ typedef enum {
 - (id)initWithGridNum:(int)num size:(int)size type:(FiledType)type;
 - (void)addBattleShip:(BattleshipView*)ship glidIdx:(int)glidIdx;
 - (void)addBattleShip:(BattleshipView*)ship colIdx:(int)colIdx rowIdx:(int)rowIdx;
+- (void)setTarget:(id)target selector:(SEL)selector;
+- (void)selectGlidIdx:(int)glidIdx;
 @end

@@ -59,9 +59,12 @@
     
     // 対戦相手のフィールド
     _othF = [[FieldView alloc]initWithGridNum:FIELD_LINE_NUM size:GLID_SIZE type:FieldTypeOth];
+    // 位置調整
     CGRect otherFrame = _myF.frame;
     otherFrame.origin.x += _sv.frame.size.width;
     _othF.frame = otherFrame;
+    // 選択したデータを相手に送る為に設定
+    [_othF setTarget:self selector:@selector(mySendDataToPeers:data:)];
     [_sv addSubview:_othF];
     
     {// ページコントロールViewの配置
@@ -76,34 +79,56 @@
     
     // スタートボタン
     UIButton *startBtn =[UIButton buttonWithType:UIButtonTypeRoundedRect];
-    startBtn.frame = CGRectMake(_myF.frame.origin.x, _myF.frame.origin.y - 30, 64, 30);
-    [startBtn setTitle:@"スタート" forState:UIControlStateNormal];
+    startBtn.frame = CGRectMake(_myF.frame.origin.x, 20, 80, 30);
+    [startBtn setTitle:@"配置完了" forState:UIControlStateNormal];
     [startBtn addTarget:self action:@selector(startBtn:) forControlEvents:UIControlEventTouchDown];
     [_sv addSubview:startBtn];
     
-    // 潜水艦
-    BattleshipView *submarine = [[BattleshipView alloc]initWithType:ShipTypeSubmarine];
+    // コネクトボタン
+    UIButton *connectBtn = [UIButton buttonWithType:UIButtonTypeContactAdd];
+    CGRect connectBtnFrame = connectBtn.frame;
+    connectBtnFrame.origin.x = _myF.frame.origin.x+_myF.frame.size.width-connectBtnFrame.size.width;
+    connectBtnFrame.origin.y = 20;
+    connectBtn.frame = connectBtnFrame;
+    [connectBtn addTarget:self action:@selector(connect:) forControlEvents:UIControlEventTouchDown];
+    [self.view addSubview:connectBtn];
+    
+    // 戦艦
+    BattleshipView *battleShip = [[BattleshipView alloc]initWithType:ShipTypeBattleShip];
+    CGRect shipTmpFrame = battleShip.frame;
+    shipTmpFrame.origin.x = _myF.frame.origin.x;
+    shipTmpFrame.origin.y = self.view.frame.size.height - shipTmpFrame.size.height - 10;
+    battleShip.frame = shipTmpFrame;
     // dragジェスチャーの登録
     UIPanGestureRecognizer *pan = [[UIPanGestureRecognizer alloc]initWithTarget:self action:@selector(pan:)];
-    [submarine addGestureRecognizer:pan];
-    [self.view addSubview:submarine];
-    [submarine release];
+    [battleShip addGestureRecognizer:pan];
+    [self.view addSubview:battleShip];
+    [battleShip release];
     
     // 駆逐艦
     BattleshipView *destroyer = [[BattleshipView alloc]initWithType:ShipTypeDestroyer];
+    shipTmpFrame = destroyer.frame;
+    shipTmpFrame.origin.x = battleShip.frame.origin.x+battleShip.frame.size.width+10;
+    shipTmpFrame.origin.y = battleShip.frame.origin.y;
+    destroyer.frame = shipTmpFrame;
     // dragジェスチャーの登録
     pan = [[UIPanGestureRecognizer alloc]initWithTarget:self action:@selector(pan:)];
     [destroyer addGestureRecognizer:pan];
     [self.view addSubview:destroyer];
     [destroyer release];
     
-    // 戦艦
-    BattleshipView *battleShip = [[BattleshipView alloc]initWithType:ShipTypeBattleShip];
+    
+    // 潜水艦
+    BattleshipView *submarine = [[BattleshipView alloc]initWithType:ShipTypeSubmarine];
+    shipTmpFrame = submarine.frame;
+    shipTmpFrame.origin.x = destroyer.frame.origin.x+destroyer.frame.size.width+10;
+    shipTmpFrame.origin.y = battleShip.frame.origin.y;
+    submarine.frame = shipTmpFrame;
     // dragジェスチャーの登録
     pan = [[UIPanGestureRecognizer alloc]initWithTarget:self action:@selector(pan:)];
-    [battleShip addGestureRecognizer:pan];
-    [self.view addSubview:battleShip];
-    [battleShip release];
+    [submarine addGestureRecognizer:pan];
+    [self.view addSubview:submarine];
+    [submarine release];
     
     [pan release];
 }
@@ -219,6 +244,7 @@
         }else{
             // 移動しているのが未配置の戦艦なら次の移動用Viewを追加しておく
             BattleshipView *copy = [[BattleshipView alloc]initWithType:ship.type];
+            copy.frame = ship.frame;
             
             UIPanGestureRecognizer *pan = [[UIPanGestureRecognizer alloc]initWithTarget:self action:@selector(pan:)];
             [copy addGestureRecognizer:pan];
@@ -309,49 +335,48 @@
 {
     DebugLog(@"start");
     // NSDataにシリアライズして初回設定値を受け渡す
-    NSData *data = [NSKeyedArchiver archivedDataWithRootObject:_myF];
-    [self mySendDataToPeers:data];
+    [self mySendDataToPeers:[NSNumber numberWithInt:GameStatusInit] data:_myF];
 }
 
 
 - (void)bullet:(CGPoint)point
 {
-    if (_bullet != nil) {
-        return;
-    }
-    
-    // 弾表示位置
-    float rand_x = rand() % 320;
-    float height = 6;
-    float width = 3;
-    CGRect rect = CGRectMake(rand_x, 460-height, width, height);
-    NSData *data = [NSData dataWithBytes:&rect length:sizeof(rect)];
-    
-    [UIView animateWithDuration:2.0f // 完了するまでにかかる秒数
-                          delay:0.0f // 開始までの秒数
-                        options:UIViewAnimationOptionCurveLinear
-                     animations:^{
-                         
-                         
-                         _bullet = [[UIView alloc]initWithFrame:rect];
-                         _bullet.backgroundColor = [UIColor blackColor];
-                         [self.view addSubview:_bullet];
-                         
-                         CGRect r = _bullet.frame;
-                         r.origin.y = 0 - r.size.height;
-                         _bullet.frame = r;
-                     }
-                     completion:^(BOOL finished){
-                         NSLog(@"Completed! rand_x[%f]",rand_x);
-                         [_bullet removeFromSuperview];
-                         [_bullet release];
-                         _bullet = nil;
-                         
-                         // データ送信
-                         [self mySendDataToPeers:data];
-                     }];
-    //    NSString *message = @"メッセージ送るよ";
-    //    NSData *data = [message dataUsingEncoding:NSUTF8StringEncoding];
+//    if (_bullet != nil) {
+//        return;
+//    }
+//    
+//    // 弾表示位置
+//    float rand_x = rand() % 320;
+//    float height = 6;
+//    float width = 3;
+//    CGRect rect = CGRectMake(rand_x, 460-height, width, height);
+//    NSData *data = [NSData dataWithBytes:&rect length:sizeof(rect)];
+//    
+//    [UIView animateWithDuration:2.0f // 完了するまでにかかる秒数
+//                          delay:0.0f // 開始までの秒数
+//                        options:UIViewAnimationOptionCurveLinear
+//                     animations:^{
+//                         
+//                         
+//                         _bullet = [[UIView alloc]initWithFrame:rect];
+//                         _bullet.backgroundColor = [UIColor blackColor];
+//                         [self.view addSubview:_bullet];
+//                         
+//                         CGRect r = _bullet.frame;
+//                         r.origin.y = 0 - r.size.height;
+//                         _bullet.frame = r;
+//                     }
+//                     completion:^(BOOL finished){
+//                         NSLog(@"Completed! rand_x[%f]",rand_x);
+//                         [_bullet removeFromSuperview];
+//                         [_bullet release];
+//                         _bullet = nil;
+//                         
+//                         // データ送信
+//                         [self mySendDataToPeers:data];
+//                     }];
+//    //    NSString *message = @"メッセージ送るよ";
+//    //    NSData *data = [message dataUsingEncoding:NSUTF8StringEncoding];
 }
 
 // ページコントロールが押されたときの処理
@@ -366,11 +391,25 @@
 // Connectボタン
 - (IBAction)connect:(id)sender
 {
-//    [self startPicker];
+    [self startPicker];
+}
+
+// ページ遷移
+- (void)gotoPage:(NSNumber*)page
+{
+ 
+    NSInteger targetPage = [page integerValue];
     
-    // NSDataにシリアライズして初回設定値を受け渡す
-    NSData *data = [NSKeyedArchiver archivedDataWithRootObject:_myF];
-    [self mySendDataToPeers:data];
+    if(_pc.currentPage != targetPage){
+        
+        CGRect frame = _sv.frame;
+        frame.origin.x = frame.size.width * targetPage;
+        
+        // 指定ページへスクロールする
+        [_sv scrollRectToVisible:frame animated:YES];
+    }else{
+        DebugLog(@"移動先のページに遷移済み");
+    }
 }
 
 #pragma mark -
@@ -459,55 +498,106 @@
 #pragma mark data Send/Receive Methods
 
 // ほかのピアにデータを送信する
-- (void) mySendDataToPeers:(NSData *)data
+- (void) mySendDataToPeers:(NSNumber*)gameStatus data:(id)data
 {
     NSError *error = nil;
     
+    switch ([gameStatus intValue]) {
+        case GameStatusInit:
+            DebugLog(@"フィールドデータ送信");
+            break;
+        case GameStatusPlay:
+            DebugLog(@"マス選択データ送信");
+            // 送信したら自分のフィールドに移動
+            [self performSelector:@selector(gotoPage:) withObject:[NSNumber numberWithInt:0] afterDelay:2.5];
+            break;
+            
+        default:
+            break;
+    }
+    
+    // ステータスとデータをArrayに詰める
+    NSArray *dataArray = [[NSArray alloc]initWithObjects:gameStatus, data, nil];
+    
     // 特定のピアに送る
-    BOOL ok =[self.gameSession sendData:data toPeers:[NSArray arrayWithObject:self.vsPeerId] withDataMode:GKSendDataReliable error:&error];
+    BOOL ok =[self.gameSession sendData:[NSKeyedArchiver archivedDataWithRootObject:dataArray]
+                                toPeers:[NSArray arrayWithObject:self.vsPeerId]
+                           withDataMode:GKSendDataReliable error:&error];
+    [dataArray release];
+    
 //    // 全てのピアに送る
 //    BOOL ok = [self.gameSession sendDataToAllPeers:data withDataMode:GKSendDataReliable error:&error];
     
     NSString *message = @"";
-    if (ok) {
-        message = @"対戦相手にデータを送信しました";
-    }else{
+    if (!ok) {
         message = @"データの送信に失敗しました";
         DebugLog(@"%d %@", [error code], [error localizedDescription]);
+        
+        UIAlertView *alert = [[UIAlertView alloc] initWithTitle:@"データ送信"
+                                                        message:message
+                                                       delegate:self cancelButtonTitle:@"OK" otherButtonTitles: nil];
+        [alert show];
+        [alert release];
+
     }
-    
-    UIAlertView *alert = [[UIAlertView alloc] initWithTitle:@"データ送信"
-													message:message
-												   delegate:self cancelButtonTitle:@"OK" otherButtonTitles: nil];
-	
-	[alert show];
-	[alert release];
-//    NSLog(@"Data send [%d]", ok);
-    
 }
 
 // ほかのピアからデータを受け取る
 - (void) receiveData:(NSData *)data fromPeer:(NSString *)peer inSession:(GKSession *)session context:(void *)context
 {
 //    NSLog(@"Data receive [%@]", data);
-    
-    {// フィールド情報を受け取る
-        FieldView *field = [NSKeyedUnarchiver unarchiveObjectWithData:data];
         
-        // 当り情報を設定する
-        _othF.ships = field.ships;
-        // 開始フラグをたてる
-        _othF.isPlay = YES;
+    // 受け取ったデータをアンアーカイブする
+    NSArray *dataArray = [NSKeyedUnarchiver unarchiveObjectWithData:data];
+    
+    // ステータスコードは配列の先頭に格納している
+    int statusCode = [[dataArray objectAtIndex:0]intValue];
+    
+    switch (statusCode) {
+        case GameStatusInit:
+            
+            {// データ到着
+                NSString *message = @"対戦相手のデータを受信しました";
+                UIAlertView *alert = [[UIAlertView alloc] initWithTitle:@"データ送信"
+                                                                message:message
+                                                               delegate:self cancelButtonTitle:@"OK" otherButtonTitles: nil];
+                
+                [alert show];
+                [alert release];
+            }
+
+            {// フィールド情報を受け取る
+                FieldView *field = [dataArray objectAtIndex:1];
+                
+                // 当り情報を設定する
+                _othF.ships = field.ships;
+                // 開始フラグをたてる
+                _othF.isPlay = YES;
+            }
+            
+            // 受信したら対戦相手のフィールドに移動
+            [self performSelector:@selector(gotoPage:) withObject:[NSNumber numberWithInt:1] afterDelay:2.5];
+            
+            break;
+        case GameStatusPlay:
+            DebugLog(@"ステータスPLAY");
+            {// グリッド番号を受け取る
+                int glidIdx = [[dataArray objectAtIndex:1]intValue];
+                DebugLog(@"選択されたグリッド番号は[%d]",glidIdx);
+                
+                // 自分のフィールドマスを選択された状態にする
+                [_myF selectGlidIdx:glidIdx];
+            }
+            
+            // 受信したら対戦相手のフィールドに移動
+            [self performSelector:@selector(gotoPage:) withObject:[NSNumber numberWithInt:1] afterDelay:2.5];
+            break;
+        default:
+            DebugLog(@"ステータスERROR");
+            break;
     }
     
-    NSString *message = @"対戦相手のデータを受信しました";
-    UIAlertView *alert = [[UIAlertView alloc] initWithTitle:@"データ送信"
-													message:message
-												   delegate:self cancelButtonTitle:@"OK" otherButtonTitles: nil];
-	
-	[alert show];
-	[alert release];
-    
+        
 //    {// CGPointを受け取る
 //        CGPoint center = *(CGPoint*)[data bytes];
 //        UIView *bom = [[BomView alloc]initWithFrame:CGRectMake(0, 0, 50, 50)];

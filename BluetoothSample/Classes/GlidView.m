@@ -50,18 +50,18 @@
     CGRect _markRect = CGRectInset(_rect, boxW / 2.5, boxH / 2.5);
     
     switch (glidStatus) {
-        case GlidStateBegin:
+        case GlidStateBegin:// 初期マス
             
             CGContextSetFillColor(context, CGColorGetComponents(_glidColor.CGColor));
 //            CGContextSetRGBFillColor(context, 0.53, 0.81, 0.92, 1); // 色
             
             CGContextFillRect(context, _rect); // 塗りを描画
             break;
-        case GlidStateHit:
+        case GlidStateHit:// 選択して当ったマス
             CGContextSetRGBFillColor(context, 1, 0, 0, 1); // 色
             CGContextFillRect(context, _rect); // 塗りを描画
             break;
-        case GlidStateSelect:
+        case GlidStateSelect:// 選択したマス
             
             // 塗りつぶしの色
             CGContextSetGrayFillColor(context, 0.45, 1.0); // 色
@@ -75,6 +75,16 @@
             
             CGContextMoveToPoint(context, _markRect.origin.x+_markRect.size.width, _markRect.origin.y);  // 始点
             CGContextAddLineToPoint(context, _markRect.origin.x, _markRect.size.height+_markRect.origin.y);  // 終点
+            CGContextStrokePath(context);  // 線描画
+            
+            break;
+        case GlidStateSelected:// 選択されたマス
+            CGContextSetGrayFillColor(context, 0.45, 1.0); // 色
+            CGContextFillRect(context, _rect); // 塗りを描画
+            
+            CGContextSetLineWidth(context, 2);
+            CGContextMoveToPoint(context, _rect.origin.x, _rect.origin.y);  // 始点
+            CGContextAddLineToPoint(context, _rect.origin.x+_rect.size.width, _rect.origin.y+_rect.size.height);  // 終点
             CGContextStrokePath(context);  // 線描画
             
             break;

@@ -7,6 +7,7 @@
 //
 
 #import "FieldView.h"
+#import "BlViewController.h"
 
 @implementation FieldView
 
@@ -49,6 +50,12 @@
         isPlay = NO;
     }
     return self;
+}
+
+- (void)setTarget:(id)target selector:(SEL)selector
+{
+    _sendTarget = target;
+    _sendSelector = selector;
 }
 
 // フィールドを描画
@@ -168,12 +175,12 @@
     if (isPlay) {
         UITouch* touch = [touches anyObject];
         CGPoint pt = [touch locationInView:self];
-        [self selectGlid:pt];
+        [self selectGlidPt:pt];
     }
 }
 
 // マス目が選択されたら
-- (void)selectGlid:(CGPoint)point
+- (void)selectGlidPt:(CGPoint)point
 {
     //    // 弾表示位置
     //    NSData *data = [NSData dataWithBytes:&point length:sizeof(point)];
@@ -195,15 +202,35 @@
         return;
     }
     
-    // グリッドの再描画
+    // グリッドインデックスを算出
     int glidIdx = colIdx + rowIdx * self.rowNum;
+    
+    // グリッド選択
+    [self selectGlidIdx:glidIdx];
+}
+
+// マス目が選択されたら
+- (void)selectGlidIdx:(int)glidIdx
+{
+    //    // 弾表示位置
+    //    NSData *data = [NSData dataWithBytes:&point length:sizeof(point)];
+    //
+    //    // データ送信
+    //    [self mySendDataToPeers:data];
+    
     GlidView *glid = [self.glids objectAtIndex:glidIdx];
     
-    // 当たり？
-    BOOL hit = [self.ships.allKeys containsObject:[NSString stringWithFormat:@"%d", glidIdx]];
-    glid.glidStatus = (hit)? GlidStateHit : GlidStateSelect;
-    
-    [self bringSubviewToFront:glid]; // 指定のグリッドを一番上の階層に移動
+    if (_type == FieldTypeOwn) {
+        // 自分のフィールド
+        glid.glidStatus = GlidStateSelected;
+    }else{
+        // 相手のフィールド
+        // 当たり判定
+        BOOL hit = [self.ships.allKeys containsObject:[NSString stringWithFormat:@"%d", glidIdx]];
+        glid.glidStatus = (hit)? GlidStateHit : GlidStateSelect;
+        
+        [self bringSubviewToFront:glid]; // 指定のグリッドを一番上の階層に移動
+    }
     
     glid.alpha = 0;
     [UIView animateWithDuration:2.0f // 完了するまでにかかる秒数
@@ -217,6 +244,8 @@
                      }];
     [glid setNeedsDisplay];
     
+    // 選択したグリッドindexを対戦相手に送る
+    [_sendTarget performSelector:_sendSelector withObject:[NSNumber numberWithInt:GameStatusPlay] withObject:[NSNumber numberWithInt:glidIdx]];
     
     //    [UIView animateWithDuration:0.2f // 完了するまでにかかる秒数
     //                          delay:0.0f // 開始までの秒数
@@ -226,7 +255,7 @@
     //                         glid.transform = CGAffineTransformMakeScale(2.0, 2.0);
     //                     }
     //                     completion:^(BOOL finished){
-    //                         
+    //
     //                         [UIView animateWithDuration:0.3f // 完了するまでにかかる秒数
     //                                               delay:0.0f // 開始までの秒数
     //                                             options:UIViewAnimationOptionCurveEaseIn
@@ -244,7 +273,7 @@
     //    NSLog(@"col[%d] row[%d]",col,row);
     //    [self.view addSubview:bom];
     //    [bom release];
-    //    
+    //
     //    [UIView animateWithDuration:0.4f // 完了するまでにかかる秒数
     //                          delay:0.0f // 開始までの秒数
     //                        options:UIViewAnimationOptionCurveEaseOut
@@ -253,7 +282,7 @@
     //                         bom.transform = CGAffineTransformMakeScale(2.0, 2.0);
     //                     }
     //                     completion:^(BOOL finished){
-    //                         
+    //
     //                         [UIView animateWithDuration:0.3f // 完了するまでにかかる秒数
     //                                               delay:0.0f // 開始までの秒数
     //                                             options:UIViewAnimationOptionCurveEaseIn

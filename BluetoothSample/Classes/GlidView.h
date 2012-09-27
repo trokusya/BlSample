@@ -12,7 +12,8 @@
 enum GlidState{
     GlidStateBegin,
     GlidStateHit,
-    GlidStateSelect
+    GlidStateSelect,
+    GlidStateSelected,
 };
 
 @interface GlidView : UIView
